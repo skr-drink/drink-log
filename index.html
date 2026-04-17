@@ -1,0 +1,1813 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>飲酒記録</title>
+<style>
+  :root{
+    --touch-h: 48px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    font-family:sans-serif;
+    padding:calc(16px + var(--safe-top)) calc(16px + var(--safe-right)) calc(110px + var(--safe-bottom)) calc(16px + var(--safe-left));
+    background:#f5f5f5;
+    margin:0;
+    color:#222;
+    -webkit-text-size-adjust:100%;
+  }
+
+  .page-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+
+  .card{
+    background:#fff;
+    padding:16px;
+    border-radius:14px;
+    margin-bottom:16px;
+    box-shadow:0 1px 4px rgba(0,0,0,.08);
+  }
+
+  input,select,textarea{
+    width:100%;
+    min-height:var(--touch-h);
+    padding:12px 12px;
+    margin:6px 0 10px;
+    border-radius:12px;
+    border:1px solid #ccc;
+    box-sizing:border-box;
+    font-size:16px;
+    background:#fff;
+    color:#222;
+  }
+
+  textarea{
+    min-height:96px;
+    resize:vertical;
+  }
+
+  button{
+    min-height:var(--touch-h);
+    padding:12px 14px;
+    border:none;
+    border-radius:12px;
+    background:#111;
+    color:#fff;
+    cursor:pointer;
+    font-size:15px;
+    line-height:1.2;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+  }
+
+  button:hover{ opacity:.92; }
+
+  .subbtn{ background:#666; }
+  .danger{ background:#b73a3a; }
+  .edit{ background:#0b63c9; }
+  .saveedit{ background:#2f7d32; }
+
+  .row{
+    display:grid;
+    grid-template-columns:minmax(120px, 1.2fr) minmax(84px, .7fr) minmax(84px, .7fr) auto;
+    gap:8px;
+    margin-bottom:10px;
+    align-items:center;
+  }
+
+  .row select,.row input{
+    min-width:0;
+    margin:0;
+  }
+
+  .row button{
+    white-space:nowrap;
+  }
+
+  .top-actions,.inline-actions,.report-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:10px;
+  }
+
+  .total{
+    background:#fff3cd;
+    padding:12px;
+    border-radius:12px;
+    margin-top:12px;
+  }
+
+  .big{
+    font-size:28px;
+    font-weight:700;
+    color:#7a5a00;
+    line-height:1.2;
+  }
+
+  .hidden{ display:none; }
+
+  .list-item{
+    border-bottom:1px solid #eee;
+    padding:12px 0;
+  }
+
+  .item-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .drink-line{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin:6px 0;
+  }
+
+  .muted{
+    color:#666;
+    font-size:13px;
+  }
+
+  .modal{
+    position:fixed;
+    inset:0;
+    z-index:1000;
+  }
+
+  .modal-backdrop{
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,.35);
+  }
+
+  .modal-content{
+    position:relative;
+    width:min(920px, calc(100vw - 24px));
+    max-height:calc(100vh - 24px);
+    overflow:auto;
+    margin:12px auto;
+    z-index:1;
+    overscroll-behavior:contain;
+  }
+
+  .tabs{
+    display:flex;
+    gap:8px;
+    margin:12px 0 16px;
+    flex-wrap:wrap;
+  }
+
+  .tab-btn,.manage-tab{
+    background:#eee;
+    color:#222;
+    border:1px solid #ddd;
+    flex:1;
+    min-width:120px;
+  }
+
+  .tab-btn.active,.manage-tab.active{
+    background:#111;
+    color:#fff;
+    border-color:#111;
+  }
+
+  .grid2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    align-items:end;
+  }
+
+  .grid3{
+    display:grid;
+    grid-template-columns:1fr 100px 100px;
+    gap:8px;
+    align-items:end;
+  }
+
+  .grid5{
+    display:grid;
+    grid-template-columns:1.2fr 1fr 100px 100px 84px;
+    gap:8px;
+    align-items:end;
+  }
+
+  .quick-wrap{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));
+    gap:12px;
+    margin-top:12px;
+  }
+
+  .quick-btn{
+    text-align:left;
+    background:#fff;
+    color:#222;
+    border:1px solid #ddd;
+    border-radius:14px;
+    padding:14px;
+    min-height:112px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+  }
+
+  .quick-btn:hover{ background:#fafafa; }
+
+  .quick-title{ font-weight:700; font-size:16px; margin-bottom:4px; }
+  .quick-sub{ font-size:13px; color:#555; line-height:1.4; }
+  .quick-g{ font-size:20px; font-weight:700; margin-top:8px; color:#7a5a00; }
+
+  .unit-input{
+    position:relative;
+  }
+
+  .unit-input input{
+    padding-right:38px;
+    margin:0;
+    min-height:var(--touch-h);
+  }
+
+  .unit-label{
+    position:absolute;
+    right:10px;
+    top:50%;
+    transform:translateY(-50%);
+    color:#dd1b1b;
+    font-size:14px;
+    pointer-events:none;
+  }
+
+  .preset-row{
+    margin-bottom:8px;
+  }
+
+  .preset-delete-btn{
+    width:84px;
+    padding:10px;
+    margin:0;
+  }
+
+  .report-summary-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:10px;
+    margin-top:12px;
+  }
+
+  .report-summary-box{
+    border:1px solid #eee;
+    border-radius:12px;
+    padding:12px;
+    background:#fafafa;
+  }
+
+  .report-summary-box .label{
+    font-size:12px;
+    color:#666;
+    margin-bottom:4px;
+  }
+
+  .report-summary-box .value{
+    font-size:24px;
+    font-weight:700;
+    color:#7a5a00;
+  }
+
+  .report-sheet{
+    background:#fff;
+    border:1px solid #e8e8e8;
+    border-radius:12px;
+    padding:16px;
+    margin-top:14px;
+  }
+
+  .report-table-wrap{
+    overflow:auto;
+    margin-top:14px;
+  }
+
+  .report-table{
+    width:100%;
+    border-collapse:collapse;
+    background:#fff;
+  }
+
+  .report-table th,.report-table td{
+    border:1px solid #e5e5e5;
+    padding:10px;
+    text-align:left;
+    font-size:14px;
+    white-space:nowrap;
+  }
+
+  .report-table th{
+    background:#f7f7f7;
+  }
+
+  .mobile-savebar{
+    position:sticky;
+    bottom:calc(-16px - var(--safe-bottom));
+    margin:
+      18px -16px calc(-16px - var(--safe-bottom)) -16px;
+    padding:10px 16px calc(10px + var(--safe-bottom));
+    background:rgba(245,245,245,.96);
+    backdrop-filter:blur(8px);
+    border-top:1px solid #e5e5e5;
+    z-index:20;
+  }
+
+  .mobile-savebar .top-actions{
+    margin-top:0;
+  }
+
+  .mobile-savebar .top-actions button{
+    flex:1;
+  }
+
+  @media (max-width: 640px){
+    body{
+      padding:calc(12px + var(--safe-top)) calc(12px + var(--safe-right)) calc(120px + var(--safe-bottom)) calc(12px + var(--safe-left));
+    }
+
+    .page-header{
+      align-items:stretch;
+    }
+
+    .page-header button{
+      width:100%;
+    }
+
+    .grid2{
+      grid-template-columns:1fr;
+    }
+
+    .grid3{
+      grid-template-columns:1fr 96px 96px;
+    }
+
+    .grid5{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .report-summary-grid{
+      grid-template-columns:1fr;
+    }
+
+    .quick-wrap{
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .quick-btn{
+      min-height:124px;
+      padding:14px 12px;
+    }
+
+    .preset-delete-btn{
+      width:100%;
+    }
+
+    .row{
+      grid-template-columns:1fr 1fr;
+      align-items:stretch;
+      background:#fafafa;
+      border:1px solid #eee;
+      border-radius:14px;
+      padding:10px;
+    }
+
+    .row select{
+      grid-column:1 / -1;
+    }
+
+    .row input{
+      min-width:0;
+    }
+
+    .row button{
+      grid-column:1 / -1;
+      width:100%;
+    }
+
+    .tabs{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+    }
+
+    .tab-btn,.manage-tab{
+      min-width:0;
+      width:100%;
+    }
+
+    .item-head .edit{
+      width:100%;
+    }
+
+    .inline-actions button,
+    .report-actions button,
+    #normalMode > button,
+    #manageSettingsPane .top-actions button,
+    #quickMode .top-actions button{
+      width:100%;
+    }
+
+    .top-actions,
+    .inline-actions,
+    .report-actions{
+      flex-direction:column;
+    }
+
+    .mobile-savebar{
+      bottom:calc(-16px - var(--safe-bottom));
+    }
+  }
+
+  @media print{
+  body *{
+    visibility:hidden;
+  }
+
+  #manageModal,
+  #manageModal *{
+    visibility:visible;
+  }
+
+  #manageModal{
+    position:absolute;
+    inset:0;
+    display:block !important;
+    background:#fff;
+  }
+
+  #manageModal .modal-backdrop{
+    display:none !important;
+  }
+
+  #manageModal .modal-content{
+    width:100% !important;
+    max-height:none !important;
+    overflow:visible !important;
+    margin:0 !important;
+    padding:0 !important;
+    box-shadow:none !important;
+    border:none !important;
+    background:#fff !important;
+  }
+
+  #manageModal .tabs,
+  #manageSettingsPane,
+  #manageRecordsPane,
+  #reportControls,
+  #manageModal h3,
+  #manageModal .subbtn{
+    display:none !important;
+  }
+
+  #manageReportPane{
+    display:block !important;
+  }
+
+  #reportOutput,
+  #reportOutput *{
+    visibility:visible;
+  }
+
+  #reportOutput{
+    display:block !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
+
+  .report-sheet{
+    border:none !important;
+    margin:0 !important;
+    padding:0 !important;
+    box-shadow:none !important;
+  }
+}
+
+.quick-selected-box{
+  margin-top:14px;
+  border:1px solid #e6e6e6;
+  border-radius:14px;
+  background:#fafafa;
+  padding:12px;
+}
+
+.quick-selected-title{
+  font-size:14px;
+  font-weight:700;
+  margin-bottom:8px;
+  color:#333;
+}
+
+.quick-selected-items{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.quick-selected-empty{
+  font-size:13px;
+  color:#666;
+}
+
+.quick-selected-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:#fff;
+  border:1px solid #eee;
+}
+
+.quick-selected-main{
+  min-width:0;
+}
+
+.quick-selected-name{
+  font-size:14px;
+  font-weight:700;
+  color:#222;
+  line-height:1.4;
+}
+
+.quick-selected-sub{
+  font-size:12px;
+  color:#666;
+  margin-top:2px;
+  line-height:1.4;
+}
+
+.quick-selected-g{
+  font-size:14px;
+  font-weight:700;
+  color:#7a5a00;
+  white-space:nowrap;
+}
+
+@media (max-width: 640px){
+  .quick-selected-row{
+    padding:10px;
+  }
+}
+
+.record-date{
+  font-weight:700;
+  font-size:16px;
+  color:#222;
+}
+
+.record-weekday{
+  color:#666;
+  font-size:14px;
+  margin-left:4px;
+}
+
+.record-total{
+  font-weight:700;
+  color:#7a5a00;
+  white-space:nowrap;
+}
+
+
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div>
+    <h2 style="margin:0;">🍶 飲酒記録</h2>
+    <p class="muted" style="margin:8px 0 0;">入力は静かに、一覧とレポートは管理画面へ</p>
+  </div>
+  <button type="button" class="subbtn" onclick="openManageModal()">⚙ 管理</button>
+</div>
+
+<div id="entryCard" class="card">
+  <label>日付</label>
+  <input type="text" id="date" placeholder="例: 0415 / 20260415 / 2026-04-15" inputmode="numeric" autocomplete="off">
+  <div class="muted">MMDDだけでも入力可。自動で YYYY-MM-DD に整えます</div>
+
+<div id="weekday" class="muted" style="margin-top:-6px;"></div>
+
+  <div class="tabs">
+   <button type="button" id="tab-normal" class="tab-btn" onclick="setInputMode('normal')">通常入力</button>
+<button type="button" id="tab-quick" class="tab-btn active" onclick="setInputMode('quick')">3秒入力</button>
+  </div>
+
+  <div id="normalMode">
+    <div id="drinks"></div>
+    <button type="button" onclick="addRow({}, true)">＋追加</button>
+  </div>
+
+<div id="quickMode" class="hidden">
+  <div class="muted">よく使う入力をワンタップで追加できます</div>
+  <div id="quickButtons" class="quick-wrap"></div>
+
+  <div class="top-actions">
+    <button type="button" class="subbtn" onclick="undoLastQuickAdd()">↶ 直前の1件を取り消す</button>
+  </div>
+
+  <div id="quickSelectedList" class="quick-selected-box">
+    <div class="quick-selected-title">このあと保存される内容</div>
+    <div id="quickSelectedItems" class="quick-selected-items"></div>
+  </div>
+</div>
+
+  <div class="total">
+    <div class="muted">その日の合計 純アルコール量</div>
+    <div id="total" class="big">0.0 g</div>
+  </div>
+
+  <label>前の気持ち</label>
+  <select id="before">
+    <option value=""></option>
+    <option>なんとなく</option>
+    <option>ストレス</option>
+    <option>不安</option>
+    <option>習慣</option>
+    <option>楽しい気分</option>
+    <option>その他</option>
+  </select>
+
+  <label>後の気持ち</label>
+  <select id="after">
+    <option value=""></option>
+    <option>落ち着いた</option>
+    <option>変わらない</option>
+    <option>後悔</option>
+    <option>しんどい</option>
+    <option>飲み足りない</option>
+    <option>その他</option>
+  </select>
+
+  <label>メモ</label>
+  <textarea id="memo"></textarea>
+
+  <div class="mobile-savebar">
+    <div class="top-actions">
+      <button type="button" class="subbtn" onclick="openRecordsFromEntry()">編集</button>
+      <button id="saveBtn" onclick="save()">保存</button>
+      <button id="cancelEditBtn" class="danger" onclick="cancelEdit()" style="display:none;">編集をやめる</button>
+    </div>
+  </div>
+</div>
+
+<div id="manageModal" class="modal" style="display:none;">
+  <div class="modal-backdrop" onclick="closeManageModal()"></div>
+  <div class="modal-content card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+      <h3 style="margin:0;">管理</h3>
+      <button type="button" class="subbtn" onclick="closeManageModal()">✕</button>
+    </div>
+
+    <div class="tabs">
+      <button type="button" id="manage-tab-settings" class="manage-tab active" onclick="setManageTab('settings')">設定</button>
+      <button type="button" id="manage-tab-records" class="manage-tab" onclick="setManageTab('records')">記録一覧</button>
+      <button type="button" id="manage-tab-report" class="manage-tab" onclick="setManageTab('report')">レポート</button>
+    </div>
+
+    <div id="manageSettingsPane">
+      <div style="font-weight:700;margin-bottom:8px;">酒の種類ごとのデフォルト値</div>
+      <div class="muted">種類を選んだ時に自動で入る ml / % を設定できます</div>
+      <div id="defaultSettings" style="margin-top:12px;"></div>
+
+      <div style="font-weight:700;margin:18px 0 8px;">よく使う酒（3秒入力ボタン）</div>
+      <div class="muted">3秒入力で出すボタンを追加・編集・削除できます</div>
+      <div id="quickPresetSettings" style="margin-top:12px;"></div>
+      <div style="margin-top:8px;">
+        <button type="button" class="subbtn" onclick="addQuickPresetRow()">＋ よく使う酒を追加</button>
+      </div>
+
+      <div class="top-actions">
+        <button type="button" onclick="saveAllSettings()">設定を保存</button>
+      </div>
+    </div>
+
+    <div id="manageRecordsPane" class="hidden">
+      <div class="muted">保存済み記録の確認・編集はここで行います</div>
+      <div id="list" style="margin-top:12px;"></div>
+    </div>
+
+    <div id="manageReportPane" class="hidden">
+      <div id="reportControls">
+        <div class="muted">指定した期間の日別サマリー（純アルコールg）と平均を表示します</div>
+        <div class="grid2" style="margin-top:12px;">
+          <div>
+            <label>開始日</label>
+            <input type="date" id="reportStart">
+          </div>
+          <div>
+            <label>終了日</label>
+            <input type="date" id="reportEnd">
+          </div>
+        </div>
+
+<div class="report-actions">
+  <button type="button" onclick="generateReport()">レポート作成</button>
+  <button type="button" class="subbtn" onclick="printReport()">PDF用に表示 / 印刷</button>
+  <button type="button" class="subbtn" onclick="downloadDailyCsv()">日別CSV</button>
+  <button type="button" class="subbtn" onclick="downloadDetailCsv()">明細CSV</button>
+</div>
+
+<div id="reportOutput" class="report-sheet">
+  <div class="muted">期間を選んで「レポート作成」を押すと、ここに診察用の一覧が出ます。</div>
+</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const key = "alcohol-day-log-v12";
+const defaultKey = "alcohol-defaults-v3";
+const quickPresetKey = "alcohol-quick-presets-v4";
+
+const drinkOptions = ["微ビール","チューハイ","日本酒","焼酎","ビール","スピリッツ","その他"];
+
+const builtInDefaults = {
+  "微ビール": { ml: 350, percent: 3 },
+  "チューハイ": { ml: 500, percent: 6 },
+  "日本酒": { ml: 180, percent: 15 },
+  "焼酎": { ml: 100, percent: 25 },
+  "ビール": { ml: 350, percent: 5 },
+  "スピリッツ": { ml: 45, percent: 7 },
+  "その他": { ml: "", percent: "" }
+};
+
+const builtInQuickPresets = [
+  { id: "qp1", label: "ビール350", type: "ビール", ml: 350, p: 5 },
+  { id: "qp2", label: "ビール500", type: "ビール", ml: 500, p: 5 },
+  { id: "qp3", label: "チューハイ500", type: "チューハイ", ml: 500, p: 6 },
+  { id: "qp4", label: "日本酒1合", type: "日本酒", ml: 180, p: 15 }
+];
+
+let data = JSON.parse(localStorage.getItem(key) || "[]");
+let currentEditDate = null;
+let currentManageTab = "settings";
+let currentInputMode = "quick";
+let lastQuickAddedDrinkId = null;
+
+function pureAlcohol(ml, p){
+  return (Number(ml || 0) * (Number(p || 0) / 100) * 0.8) || 0;
+}
+
+function makeId(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function getTodayString(){
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function getWeekday(dateStr){
+  if(!dateStr) return "";
+  const d = new Date(dateStr);
+  if(isNaN(d)) return "";
+  const w = ["日","月","火","水","木","金","土"];
+  return `（${w[d.getDay()]}）`;
+}
+
+function normalizeDateInput(raw){
+  const value = String(raw || "").trim();
+  if(!value) return "";
+
+  const currentYear = new Date().getFullYear();
+
+  if(/^\d{4}$/.test(value)){
+    const mm = value.slice(0, 2);
+    const dd = value.slice(2, 4);
+    return `${currentYear}-${mm}-${dd}`;
+  }
+
+  if(/^\d{8}$/.test(value)){
+    const yyyy = value.slice(0, 4);
+    const mm = value.slice(4, 6);
+    const dd = value.slice(6, 8);
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  const match = value.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+  if(match){
+    const yyyy = match[1];
+    const mm = String(match[2]).padStart(2, "0");
+    const dd = String(match[3]).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  if(/^\d{4}-\d{2}-\d{2}$/.test(value)){
+    return value;
+  }
+
+  return value;
+}
+
+function isValidDateString(value){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [y, m, d] = value.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
+}
+
+function focusElement(el){
+  if(!el) return;
+  setTimeout(() => el.focus(), 0);
+}
+
+function setData(){
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+function getDefaults(){
+  const stored = localStorage.getItem(defaultKey);
+  if(!stored) return JSON.parse(JSON.stringify(builtInDefaults));
+  try{
+    const parsed = JSON.parse(stored);
+    return { ...builtInDefaults, ...parsed };
+  } catch {
+    return JSON.parse(JSON.stringify(builtInDefaults));
+  }
+}
+
+function saveDefaultsOnly(){
+  const obj = {};
+  drinkOptions.forEach(type => {
+    obj[type] = {
+      ml: document.getElementById(`default-ml-${type}`).value,
+      percent: document.getElementById(`default-percent-${type}`).value
+    };
+  });
+  localStorage.setItem(defaultKey, JSON.stringify(obj));
+}
+
+function getQuickPresets(){
+  const stored = localStorage.getItem(quickPresetKey);
+  if(!stored) return builtInQuickPresets;
+  try{
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) && parsed.length ? parsed : builtInQuickPresets;
+  } catch {
+    return builtInQuickPresets;
+  }
+}
+
+function saveQuickPresetsOnly(){
+  const rows = [...document.querySelectorAll("#quickPresetSettings .preset-row")];
+  const list = rows.map(row => ({
+    id: row.dataset.presetId || makeId(),
+    label: row.querySelector(".qp-label").value.trim(),
+    type: row.querySelector(".qp-type").value,
+    ml: row.querySelector(".qp-ml").value,
+    p: row.querySelector(".qp-percent").value
+  })).filter(item => item.label && item.type && item.ml && item.p);
+
+  localStorage.setItem(quickPresetKey, JSON.stringify(list.length ? list : builtInQuickPresets));
+}
+
+function saveAllSettings(){
+  saveDefaultsOnly();
+  saveQuickPresetsOnly();
+  renderQuickButtons();
+  alert("設定を保存しました");
+  closeManageModal(); // ←これ追加
+}
+
+function setInputMode(mode){
+  currentInputMode = mode;
+  document.getElementById("tab-normal").classList.toggle("active", mode === "normal");
+  document.getElementById("tab-quick").classList.toggle("active", mode === "quick");
+  document.getElementById("normalMode").classList.toggle("hidden", mode !== "normal");
+  document.getElementById("quickMode").classList.toggle("hidden", mode !== "quick");
+
+  if(mode === "normal"){
+    const rows = document.querySelectorAll("#drinks .row");
+    if(rows.length === 0){
+      addRow({}, true);
+    }
+  }
+}
+
+function addRow(prefill = {}, focusType = false){
+  const defaults = getDefaults();
+
+  const div = document.createElement("div");
+  div.className = "row";
+  div.dataset.drinkId = prefill.id || makeId();
+
+  const typeSelect = document.createElement("select");
+  typeSelect.innerHTML = `
+    <option value="">種類</option>
+    ${drinkOptions.map(o => `<option value="${o}">${o}</option>`).join("")}
+  `;
+
+  const mlInput = document.createElement("input");
+  mlInput.type = "number";
+  mlInput.placeholder = "ml";
+  mlInput.inputMode = "decimal";
+
+  const pInput = document.createElement("input");
+  pInput.type = "number";
+  pInput.placeholder = "%";
+  pInput.step = "0.1";
+  pInput.inputMode = "decimal";
+
+  const deleteBtn = document.createElement("button");
+  deleteBtn.type = "button";
+  deleteBtn.className = "danger";
+  deleteBtn.textContent = "削除";
+  deleteBtn.addEventListener("click", () => {
+    div.remove();
+    calcTotal();
+  });
+
+  typeSelect.addEventListener("change", () => {
+    const selected = defaults[typeSelect.value] || { ml: "", percent: "" };
+    mlInput.value = selected.ml ?? "";
+    pInput.value = selected.percent ?? "";
+    calcTotal();
+  });
+
+  mlInput.addEventListener("input", calcTotal);
+  pInput.addEventListener("input", calcTotal);
+
+  div.appendChild(typeSelect);
+  div.appendChild(mlInput);
+  div.appendChild(pInput);
+  div.appendChild(deleteBtn);
+
+  document.getElementById("drinks").appendChild(div);
+
+  typeSelect.value = prefill.type || "";
+  mlInput.value = prefill.ml || "";
+  pInput.value = prefill.p || "";
+
+  calcTotal();
+
+  if(focusType){
+    focusElement(typeSelect);
+  }
+
+  return div;
+}
+
+function addQuickPresetToForm(presetId){
+  const preset = getQuickPresets().find(p => p.id === presetId);
+  if(!preset) return;
+  const row = addRow({
+    id: makeId(),
+    type: preset.type,
+    ml: preset.ml,
+    p: preset.p
+  }, false);
+  lastQuickAddedDrinkId = row.dataset.drinkId;
+  calcTotal();
+}
+
+function undoLastQuickAdd(){
+  if(!lastQuickAddedDrinkId){
+    alert("取り消せる直前追加がありません");
+    return;
+  }
+
+  const row = [...document.querySelectorAll("#drinks .row")]
+    .find(r => r.dataset.drinkId === lastQuickAddedDrinkId);
+
+  if(!row){
+    lastQuickAddedDrinkId = null;
+    alert("取り消せる直前追加がありません");
+    return;
+  }
+
+  row.remove();
+  lastQuickAddedDrinkId = null;
+  calcTotal();
+}
+
+function deleteQuickItem(drinkId){
+  const row = [...document.querySelectorAll("#drinks .row")]
+    .find(r => r.dataset.drinkId === drinkId);
+
+  if(!row) return;
+
+  row.remove();
+
+  if(lastQuickAddedDrinkId === drinkId){
+    lastQuickAddedDrinkId = null;
+  }
+
+  calcTotal();
+}
+
+function renderQuickButtons(){
+  const box = document.getElementById("quickButtons");
+  const presets = getQuickPresets();
+  box.innerHTML = "";
+
+  presets.forEach(preset => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "quick-btn";
+    btn.onclick = () => addQuickPresetToForm(preset.id);
+
+    const g = pureAlcohol(preset.ml, preset.p).toFixed(1);
+
+    btn.innerHTML = `
+      <div>
+        <div class="quick-title">${preset.label}</div>
+        <div class="quick-sub">${preset.type}</div>
+        <div class="quick-sub">${preset.ml}ml / ${preset.p}%</div>
+      </div>
+      <div class="quick-g">${g} g</div>
+    `;
+    box.appendChild(btn);
+  });
+}
+
+function renderQuickSelectedList(){
+  const box = document.getElementById("quickSelectedItems");
+  if(!box) return;
+
+  const drinks = collectDrinksFromForm();
+
+  if(drinks.length === 0){
+    box.innerHTML = `<div class="quick-selected-empty">まだ追加されていません</div>`;
+    return;
+  }
+
+  box.innerHTML = drinks.map((d, index) => `
+    <div class="quick-selected-row">
+      <div class="quick-selected-main">
+        <div class="quick-selected-name">
+          ${String(index + 1).padStart(2, "0")}．${d.type || "種類未設定"}
+        </div>
+        <div class="quick-selected-sub">
+          ${d.ml || 0}ml / ${d.p || 0}%
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+        <div class="quick-selected-g">${d.pureAlcohol}g</div>
+        <button 
+          type="button"
+          class="danger quick-delete-btn"
+          onclick="deleteQuickItem('${d.id}')"
+        >
+          削除
+        </button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderDefaultSettings(){
+  const defaults = getDefaults();
+  const box = document.getElementById("defaultSettings");
+  box.innerHTML = `
+    <div class="grid3" style="font-weight:700;margin-bottom:8px;">
+      <div>種類</div>
+      <div>ml</div>
+      <div>%</div>
+    </div>
+  `;
+
+  drinkOptions.forEach(type => {
+    const row = document.createElement("div");
+    row.className = "grid3";
+    row.style.marginBottom = "8px";
+    row.innerHTML = `
+      <label style="margin:0;">${type}</label>
+      <input id="default-ml-${type}" type="number" step="1" value="${defaults[type]?.ml ?? ""}" inputmode="numeric">
+      <input id="default-percent-${type}" type="number" step="0.1" value="${defaults[type]?.percent ?? ""}" inputmode="decimal">
+    `;
+    box.appendChild(row);
+  });
+}
+
+function createQuickPresetRowElement(preset = {}){
+  const row = document.createElement("div");
+  row.className = "grid5 preset-row";
+  row.dataset.presetId = preset.id || makeId();
+
+  row.innerHTML = `
+    <input type="text" class="qp-label" value="${preset.label ?? ""}" placeholder="例: いつものビール">
+
+    <select class="qp-type">
+      <option value="">種類</option>
+      ${drinkOptions.map(o => `<option value="${o}" ${preset.type === o ? "selected" : ""}>${o}</option>`).join("")}
+    </select>
+
+    <div class="unit-input">
+      <input type="number" class="qp-ml" step="1" value="${preset.ml ?? ""}" placeholder="量">
+      <span class="unit-label">ml</span>
+    </div>
+
+    <div class="unit-input">
+      <input type="number" class="qp-percent" step="0.1" value="${preset.p ?? ""}" placeholder="度数">
+      <span class="unit-label">%</span>
+    </div>
+
+    <button type="button" class="danger preset-delete-btn">削除</button>
+  `;
+
+  const typeSelect = row.querySelector(".qp-type");
+  const mlInput = row.querySelector(".qp-ml");
+  const percentInput = row.querySelector(".qp-percent");
+
+  typeSelect.addEventListener("change", () => {
+    const selectedType = typeSelect.value;
+    if(!selectedType){
+      mlInput.value = "";
+      percentInput.value = "";
+      return;
+    }
+
+    // ←ここがポイント
+    const defaultMlInput = document.getElementById(`default-ml-${selectedType}`);
+    const defaultPercentInput = document.getElementById(`default-percent-${selectedType}`);
+
+    if(defaultMlInput && defaultPercentInput){
+      mlInput.value = defaultMlInput.value ?? "";
+      percentInput.value = defaultPercentInput.value ?? "";
+    } else {
+      const defaults = getDefaults();
+      const selected = defaults[selectedType] || { ml: "", percent: "" };
+      mlInput.value = selected.ml ?? "";
+      percentInput.value = selected.percent ?? "";
+    }
+  });
+
+  row.querySelector(".preset-delete-btn").addEventListener("click", () => {
+    row.remove();
+  });
+
+  return row;
+}
+
+function renderQuickPresetSettings(){
+  const presets = getQuickPresets();
+  const box = document.getElementById("quickPresetSettings");
+  box.innerHTML = `
+    <div class="grid5" style="font-weight:700;margin-bottom:8px;">
+      <div>表示名</div>
+      <div>種類</div>
+      <div>ml</div>
+      <div>%</div>
+      <div>削除</div>
+    </div>
+  `;
+
+  presets.forEach(preset => {
+    box.appendChild(createQuickPresetRowElement(preset));
+  });
+}
+
+function addQuickPresetRow(){
+  document.getElementById("quickPresetSettings").appendChild(createQuickPresetRowElement());
+}
+
+function calcTotal(){
+  let total = 0;
+  document.querySelectorAll("#drinks .row").forEach(r => {
+    const ml = r.children[1].value;
+    const p = r.children[2].value;
+    total += pureAlcohol(ml, p);
+  });
+  document.getElementById("total").innerText = total.toFixed(1) + " g";
+  renderQuickSelectedList();
+}
+
+function collectDrinksFromForm(){
+  const drinks = [];
+  document.querySelectorAll("#drinks .row").forEach(r => {
+    const type = r.children[0].value;
+    const ml = r.children[1].value;
+    const p = r.children[2].value;
+    const id = r.dataset.drinkId || makeId();
+
+    if(type || ml || p){
+      drinks.push({
+        id,
+        type,
+        ml,
+        p,
+        pureAlcohol: pureAlcohol(ml, p).toFixed(1)
+      });
+    }
+  });
+  return drinks;
+}
+
+function save(){
+  const dateField = document.getElementById("date");
+  const date = normalizeDateInput(dateField.value);
+  dateField.value = date;
+
+  const drinks = collectDrinksFromForm();
+  const before = document.getElementById("before").value;
+  const after = document.getElementById("after").value;
+  const memo = document.getElementById("memo").value;
+
+  if(!date){
+    alert("日付を入力してください");
+    focusElement(dateField);
+    return;
+  }
+
+  if(!isValidDateString(date)){
+    alert("日付は MMDD / YYYYMMDD / YYYY-MM-DD 形式で入力してください");
+    focusElement(dateField);
+    return;
+  }
+
+  if(drinks.length === 0){
+    alert("お酒を1件以上入力してください");
+    return;
+  }
+
+  if(currentEditDate){
+    const target = data.find(d => d.date === currentEditDate);
+    if(target){
+      target.date = date;
+      target.drinks = drinks;
+      target.before = before;
+      target.after = after;
+      target.memo = memo;
+    }
+  } else {
+    const existing = data.find(d => d.date === date);
+    if(existing){
+      existing.drinks = existing.drinks.concat(drinks);
+      if(before) existing.before = existing.before ? `${existing.before} / ${before}` : before;
+      if(after) existing.after = existing.after ? `${existing.after} / ${after}` : after;
+      if(memo) existing.memo = existing.memo ? `${existing.memo} / ${memo}` : memo;
+    } else {
+      data.unshift({ date, drinks, before, after, memo });
+    }
+  }
+
+  setData();
+  resetForm(true);
+  render();
+  alert("保存しました");
+}
+
+function startEdit(date){
+  const day = data.find(d => d.date === date);
+  if(!day) return;
+
+  currentEditDate = date;
+  document.getElementById("date").value = day.date || "";
+  document.getElementById("before").value = day.before || "";
+  document.getElementById("after").value = day.after || "";
+  document.getElementById("memo").value = day.memo || "";
+  document.getElementById("drinks").innerHTML = "";
+
+  day.drinks.forEach((d, index) => addRow(d, index === 0));
+
+  document.getElementById("saveBtn").textContent = "修正を保存";
+  document.getElementById("saveBtn").className = "saveedit";
+  document.getElementById("cancelEditBtn").style.display = "inline-block";
+
+  closeManageModal();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  calcTotal();
+}
+
+function cancelEdit(){
+  resetForm(true);
+}
+
+function resetForm(focusFirstRow = false){
+  currentEditDate = null;
+  lastQuickAddedDrinkId = null;
+  document.getElementById("date").value = getTodayString();
+  document.getElementById("drinks").innerHTML = "";
+  addRow({}, focusFirstRow);
+  document.getElementById("before").value = "";
+  document.getElementById("after").value = "";
+  document.getElementById("memo").value = "";
+  document.getElementById("saveBtn").textContent = "保存";
+  document.getElementById("saveBtn").className = "";
+  document.getElementById("cancelEditBtn").style.display = "none";
+  calcTotal();
+  setInputMode("quick");
+
+  updateWeekday();
+}
+
+function deleteDay(date){
+  data = data.filter(d => d.date !== date);
+  setData();
+  if(currentEditDate === date){
+    resetForm(true);
+  }
+  render();
+}
+
+function deleteDrink(date, drinkId){
+  const day = data.find(d => d.date === date);
+  if(!day) return;
+
+  day.drinks = day.drinks.filter(dr => dr.id !== drinkId);
+
+  if(day.drinks.length === 0){
+    data = data.filter(d => d.date !== date);
+  }
+
+  setData();
+  render();
+}
+
+function render(){
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  data.sort((a, b) => b.date.localeCompare(a.date));
+
+  data.forEach(d => {
+    let total = 0;
+    d.drinks.forEach(x => {
+      total += pureAlcohol(x.ml, x.p);
+    });
+
+    const div = document.createElement("div");
+    div.className = "list-item";
+    div.innerHTML = `
+     <div class="item-head">
+  <div>
+    <b>${d.date}</b>
+    <span style="color:#666; font-size:14px; margin-left:4px;">
+      ${getWeekday(d.date)}
+    </span>
+  </div>
+  <div style="font-weight:700; color:#7a5a00;">
+    合計 ${total.toFixed(1)}g
+  </div>
+  <button onclick="startEdit('${d.date}')" class="edit">編集</button>
+</div>
+
+      <div style="margin-top:8px;">
+        ${d.drinks.map(x => `
+          <div class="drink-line">
+            <span>• ${x.type} ${x.ml}ml ${x.p}% / ${x.pureAlcohol}g</span>
+            <button onclick="deleteDrink('${d.date}','${x.id}')" style="background:#a33;padding:8px 10px;font-size:12px;border-radius:10px;">削除</button>
+          </div>
+        `).join("")}
+      </div>
+
+      <div style="margin-top:8px;">前：${d.before || ""}　後：${d.after || ""}</div>
+      <div>メモ：${d.memo || ""}</div>
+
+      <div class="inline-actions">
+        <button onclick="deleteDay('${d.date}')" class="danger">この日を削除</button>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function openManageModal(){
+  renderDefaultSettings();
+  renderQuickPresetSettings();
+  render();
+  document.getElementById("manageModal").style.display = "block";
+  setManageTab(currentManageTab);
+}
+
+function closeManageModal(){
+  document.getElementById("manageModal").style.display = "none";
+}
+
+function setManageTab(tab){
+  currentManageTab = tab;
+
+  document.getElementById("manage-tab-settings").classList.toggle("active", tab === "settings");
+  document.getElementById("manage-tab-records").classList.toggle("active", tab === "records");
+  document.getElementById("manage-tab-report").classList.toggle("active", tab === "report");
+
+  document.getElementById("manageSettingsPane").classList.toggle("hidden", tab !== "settings");
+  document.getElementById("manageRecordsPane").classList.toggle("hidden", tab !== "records");
+  document.getElementById("manageReportPane").classList.toggle("hidden", tab !== "report");
+}
+
+function openRecordsFromEntry(){
+  openManageModal();
+  setManageTab("records");
+}
+
+function getDailySummaryRows(startDate, endDate){
+  return data
+    .filter(d => d.date >= startDate && d.date <= endDate)
+    .map(d => ({
+      date: d.date,
+      total: Number(d.drinks.reduce((sum, x) => sum + pureAlcohol(x.ml, x.p), 0).toFixed(1))
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function generateReport(){
+  const start = document.getElementById("reportStart").value;
+  const end = document.getElementById("reportEnd").value;
+  const output = document.getElementById("reportOutput");
+
+  if(!start || !end){
+    alert("開始日と終了日を入力してください");
+    return;
+  }
+
+  if(start > end){
+    alert("開始日は終了日以前にしてください");
+    return;
+  }
+
+  const rows = getDailySummaryRows(start, end);
+
+  if(rows.length === 0){
+    output.innerHTML = `
+      <div class="report-sheet">
+        <h4 style="margin:0 0 8px;">診察用レポート</h4>
+        <div class="muted">対象期間：${start} ～ ${end}</div>
+        <div style="margin-top:12px;">この期間の記録はありません。</div>
+      </div>
+    `;
+    return;
+  }
+
+  const totalDays = rows.length;
+  const totalGrams = rows.reduce((sum, r) => sum + r.total, 0);
+  const avg = totalGrams / totalDays;
+
+  output.innerHTML = `
+    <div class="report-sheet">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+        <div>
+          <h4 style="margin:0 0 8px;">飲酒記録レポート</h4>
+          <div class="muted">対象期間：${start} ～ ${end}</div>
+        </div>
+        <div class="muted">主治医提示用（日別サマリー）</div>
+      </div>
+
+      <div class="report-summary-grid">
+        <div class="report-summary-box">
+          <div class="label">記録日数</div>
+          <div class="value">${totalDays}</div>
+        </div>
+        <div class="report-summary-box">
+          <div class="label">期間合計</div>
+          <div class="value">${totalGrams.toFixed(1)}g</div>
+        </div>
+        <div class="report-summary-box">
+          <div class="label">1日平均</div>
+          <div class="value">${avg.toFixed(1)}g</div>
+        </div>
+      </div>
+
+      <div class="report-table-wrap">
+        <table class="report-table">
+          
+<thead>
+  <tr>
+    <th>No</th>
+    <th>日付</th>
+    <th>曜日</th>
+    <th>純アルコール量</th>
+  </tr>
+</thead>
+<tbody>
+  ${rows.map((r, index) => `
+    <tr>
+      <td>${String(index + 1).padStart(2, "0")}</td>
+      <td>${r.date}</td>
+      <td>${getWeekday(r.date)}</td>
+      <td>${r.total.toFixed(1)}g</td>
+    </tr>
+  `).join("")}
+</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+
+function printReport(){
+  const output = document.getElementById("reportOutput");
+  const hasReport = output.textContent && !output.textContent.includes("期間を選んで");
+  if(!hasReport){
+    alert("先にレポートを作成してください");
+    return;
+  }
+
+  const printWindow = window.open("", "_blank");
+  if(!printWindow){
+    alert("印刷ウィンドウを開けませんでした。ポップアップブロックを確認してください。");
+    return;
+  }
+
+  const reportHtml = output.innerHTML;
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+      <meta charset="UTF-8">
+      <title>飲酒記録レポート</title>
+      <style>
+        @page{
+          size: A4 portrait;
+          margin: 12mm;
+        }
+
+        html, body{
+          margin: 0;
+          padding: 0;
+          background: #fff;
+          color: #222;
+          font-family: sans-serif;
+        }
+
+	body{
+  	width: 100%;
+	}
+
+       	.print-wrap{
+	width: 180mm;
+  	position: relative;
+  	left: 50%;
+  	transform: translateX(-50%);
+	}
+
+        .report-sheet{
+          width: 100%;
+          border: none !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          box-shadow: none !important;
+          background: #fff !important;
+        }
+
+        .report-summary-grid{
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 10px;
+          margin-top: 12px;
+          margin-bottom: 16px;
+        }
+
+        .report-summary-box{
+          border: 1px solid #ddd;
+          border-radius: 10px;
+          padding: 12px;
+          background: #fafafa;
+        }
+
+        .report-summary-box .label{
+          font-size: 12px;
+          color: #666;
+          margin-bottom: 4px;
+        }
+
+        .report-summary-box .value{
+          font-size: 22px;
+          font-weight: 700;
+          color: #7a5a00;
+        }
+
+        .report-table{
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 12px;
+          table-layout: auto;
+        }
+
+        .report-table th,
+        .report-table td{
+          border: 1px solid #ddd;
+          padding: 8px 10px;
+          text-align: left;
+          font-size: 14px;
+          white-space: nowrap;
+        }
+
+        .report-table th{
+          background: #f5f5f5;
+        }
+
+        .muted{
+          color: #666;
+          font-size: 13px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="print-wrap">
+        ${reportHtml}
+      </div>
+    </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+
+  setTimeout(() => {
+    printWindow.focus();
+    printWindow.print();
+  }, 300);
+}
+
+document.addEventListener("keydown", function(e){
+  if(e.key === "Escape"){
+    closeManageModal();
+  }
+});
+
+document.getElementById("date").addEventListener("blur", function(){
+  this.value = normalizeDateInput(this.value);
+  updateWeekday();
+});
+
+function csvEscape(value){
+  const str = String(value ?? "");
+  if (str.includes('"') || str.includes(',') || str.includes('\n')) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
+}
+
+function downloadTextFile(filename, content){
+  const bom = "\uFEFF";
+  const blob = new Blob([bom, content], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+
+
+function downloadDailyCsv(){
+  const start = document.getElementById("reportStart").value;
+  const end = document.getElementById("reportEnd").value;
+
+  if(!start || !end){
+    alert("開始日と終了日を入力してください");
+    return;
+  }
+
+  if(start > end){
+    alert("開始日は終了日以前にしてください");
+    return;
+  }
+
+  const rows = getDailySummaryRows(start, end);
+
+  if(rows.length === 0){
+    alert("この期間の記録はありません");
+    return;
+  }
+
+  const lines = [];
+  lines.push(["No","日付","純アルコール量(g)"].map(csvEscape).join(","));
+
+  rows.forEach((r, index) => {
+    lines.push([
+      String(index + 1).padStart(2, "0"),
+      r.date,
+      r.total.toFixed(1)
+    ].map(csvEscape).join(","));
+  });
+
+  downloadTextFile(`飲酒記録_日別_${start}_to_${end}.csv`, lines.join("\n"));
+}
+
+function downloadDetailCsv(){
+  const start = document.getElementById("reportStart").value;
+  const end = document.getElementById("reportEnd").value;
+
+  if(!start || !end){
+    alert("開始日と終了日を入力してください");
+    return;
+  }
+
+  if(start > end){
+    alert("開始日は終了日以前にしてください");
+    return;
+  }
+
+  const targetDays = data
+    .filter(d => d.date >= start && d.date <= end)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const detailRows = [];
+
+  targetDays.forEach(day => {
+    day.drinks.forEach((drink, idx) => {
+      detailRows.push({
+        rowNo: detailRows.length + 1,
+        date: day.date,
+        dailyNo: idx + 1,
+        type: drink.type || "",
+        ml: drink.ml || "",
+        percent: drink.p || "",
+        pureAlcohol: pureAlcohol(drink.ml, drink.p).toFixed(1),
+        before: day.before || "",
+        after: day.after || "",
+        memo: day.memo || ""
+      });
+    });
+  });
+
+  if(detailRows.length === 0){
+    alert("この期間の記録はありません");
+    return;
+  }
+
+  const lines = [];
+  lines.push([
+    "No",
+    "日付",
+    "日内No",
+    "種類",
+    "ml",
+    "度数(%)",
+    "純アルコール量(g)",
+    "前の気持ち",
+    "後の気持ち",
+    "メモ"
+  ].map(csvEscape).join(","));
+
+  detailRows.forEach(r => {
+    lines.push([
+      String(r.rowNo).padStart(2, "0"),
+      r.date,
+      String(r.dailyNo).padStart(2, "0"),
+      r.type,
+      r.ml,
+      r.percent,
+      r.pureAlcohol,
+      r.before,
+      r.after,
+      r.memo
+    ].map(csvEscape).join(","));
+  });
+
+  downloadTextFile(`飲酒記録_明細_${start}_to_${end}.csv`, lines.join("\n"));
+}
+
+function updateWeekday(){
+  const date = document.getElementById("date").value;
+  document.getElementById("weekday").innerText = getWeekday(date);
+}
+
+(function init(){
+  resetForm(true);
+  renderQuickButtons();
+
+  const today = getTodayString();
+  document.getElementById("reportEnd").value = today;
+
+  const start = new Date();
+  start.setDate(start.getDate() - 13);
+  const yyyy = start.getFullYear();
+  const mm = String(start.getMonth() + 1).padStart(2, "0");
+  const dd = String(start.getDate()).padStart(2, "0");
+  document.getElementById("reportStart").value = `${yyyy}-${mm}-${dd}`;
+
+  render();
+  renderQuickSelectedList();
+})();
+
+</script>
+
+</body>
+</html>
