@@ -1407,7 +1407,13 @@ function openManageModal(){
   renderQuickPresetSettings();
   render();
   document.getElementById("manageModal").style.display = "block";
-  setManageTab(currentManageTab);
+  document.getElementById("manage-tab-settings").classList.remove("active");
+  document.getElementById("manage-tab-records").classList.remove("active");
+  document.getElementById("manage-tab-report").classList.remove("active");
+
+  document.getElementById("manageSettingsPane").classList.add("hidden");
+  document.getElementById("manageRecordsPane").classList.add("hidden");
+  document.getElementById("manageReportPane").classList.add("hidden");
 }
 
 function closeManageModal(){
