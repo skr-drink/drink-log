@@ -1650,9 +1650,7 @@ function printReport(){
   document.head.appendChild(printStyle);
   document.body.appendChild(printArea);
 
-  setTimeout(() => {
-    window.print();
-  }, 100);
+  // 自動で印刷画面を開かない
 }
 
 document.addEventListener("keydown", function(e){
