@@ -1520,126 +1520,139 @@ function generateReport(){
 function printReport(){
   const output = document.getElementById("reportOutput");
   const hasReport = output.textContent && !output.textContent.includes("期間を選んで");
+
   if(!hasReport){
     alert("先に「集計を表示する」を押してください。");
     return;
   }
 
-  const printWindow = window.open("", "_blank");
-  if(!printWindow){
-    alert("印刷ウィンドウを開けませんでした。ポップアップブロックを確認してください。");
-    return;
+  const oldPrintArea = document.getElementById("printOnlyArea");
+  if(oldPrintArea){
+    oldPrintArea.remove();
   }
 
-  const reportHtml = output.innerHTML;
+  const oldPrintStyle = document.getElementById("printOnlyStyle");
+  if(oldPrintStyle){
+    oldPrintStyle.remove();
+  }
 
-  printWindow.document.write(`
-    <!DOCTYPE html>
-    <html lang="ja">
-    <head>
-      <meta charset="UTF-8">
-      <title>飲酒記録レポート</title>
-      <style>
-        @page{
-          size: A4 portrait;
-          margin: 12mm;
-        }
+  const printStyle = document.createElement("style");
+  printStyle.id = "printOnlyStyle";
+  printStyle.textContent = `
+    @media screen {
+      #printOnlyArea {
+        display: none;
+      }
+    }
 
-        html, body{
-          margin: 0;
-          padding: 0;
-          background: #fff;
-          color: #222;
-          font-family: sans-serif;
-        }
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 12mm;
+      }
 
-	body{
-  	width: 100%;
-	}
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        color: #222 !important;
+      }
 
-       	.print-wrap{
-	width: 180mm;
-  	position: relative;
-  	left: 50%;
-  	transform: translateX(-50%);
-	}
+      body > *:not(#printOnlyArea) {
+        display: none !important;
+      }
 
-        .report-sheet{
-          width: 100%;
-          border: none !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          box-shadow: none !important;
-          background: #fff !important;
-        }
+      #printOnlyArea {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        color: #222 !important;
+        font-family: sans-serif !important;
+      }
 
-        .report-summary-grid{
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 10px;
-          margin-top: 12px;
-          margin-bottom: 16px;
-        }
+      #printOnlyArea .report-sheet {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 auto !important;
+        background: #fff !important;
+      }
 
-        .report-summary-box{
-          border: 1px solid #ddd;
-          border-radius: 10px;
-          padding: 12px;
-          background: #fafafa;
-        }
+      #printOnlyArea .report-header {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        margin-bottom: 10px !important;
+      }
 
-        .report-summary-box .label{
-          font-size: 12px;
-          color: #666;
-          margin-bottom: 4px;
-        }
+      #printOnlyArea h2 {
+        margin: 0 0 6px !important;
+        font-size: 18px !important;
+      }
 
-        .report-summary-box .value{
-          font-size: 22px;
-          font-weight: 700;
-          color: #7a5a00;
-        }
+      #printOnlyArea .muted {
+        color: #666 !important;
+        font-size: 12px !important;
+      }
 
-        .report-table{
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 12px;
-          table-layout: auto;
-        }
+      #printOnlyArea .summary-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 8px !important;
+        margin: 10px 0 12px !important;
+      }
 
-        .report-table th,
-        .report-table td{
-          border: 1px solid #ddd;
-          padding: 8px 10px;
-          text-align: left;
-          font-size: 14px;
-          white-space: nowrap;
-        }
+      #printOnlyArea .summary-card {
+        border: 1px solid #ddd !important;
+        border-radius: 8px !important;
+        padding: 8px !important;
+        background: #fafafa !important;
+      }
 
-        .report-table th{
-          background: #f5f5f5;
-        }
+      #printOnlyArea .summary-card .label {
+        font-size: 11px !important;
+        color: #666 !important;
+      }
 
-        .muted{
-          color: #666;
-          font-size: 13px;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="print-wrap">
-        ${reportHtml}
-      </div>
-    </body>
-    </html>
-  `);
+      #printOnlyArea .summary-card .value {
+        font-size: 18px !important;
+        font-weight: 700 !important;
+        color: #7a5a00 !important;
+      }
 
-  printWindow.document.close();
+      #printOnlyArea table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 12px !important;
+      }
+
+      #printOnlyArea th,
+      #printOnlyArea td {
+        border: 1px solid #ddd !important;
+        padding: 6px 8px !important;
+        text-align: left !important;
+        white-space: nowrap !important;
+      }
+
+      #printOnlyArea th {
+        background: #f5f5f5 !important;
+        font-weight: 700 !important;
+      }
+    }
+  `;
+
+  const printArea = document.createElement("div");
+  printArea.id = "printOnlyArea";
+  printArea.innerHTML = output.innerHTML;
+
+  document.head.appendChild(printStyle);
+  document.body.appendChild(printArea);
 
   setTimeout(() => {
-    printWindow.focus();
-    printWindow.print();
-  }, 300);
+    window.print();
+  }, 100);
 }
 
 document.addEventListener("keydown", function(e){
