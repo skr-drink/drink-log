@@ -1650,7 +1650,7 @@ function printReport(){
   document.head.appendChild(printStyle);
   document.body.appendChild(printArea);
 
-  // 自動で印刷画面を開かない
+  window.print();
 }
 
 document.addEventListener("keydown", function(e){
