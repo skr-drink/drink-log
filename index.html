@@ -1521,7 +1521,7 @@ function printReport(){
   const output = document.getElementById("reportOutput");
   const hasReport = output.textContent && !output.textContent.includes("期間を選んで");
   if(!hasReport){
-    alert("先にレポートを作成してください");
+    alert("先に「集計を表示する」を押してください。");
     return;
   }
 
@@ -1627,6 +1627,23 @@ function printReport(){
       </style>
     </head>
     <body>
+      <style>
+        @media print {
+          .print-back-btn {
+            display: none !important;
+          }
+        }
+      </style>
+
+      <button
+        type="button"
+        class="print-back-btn"
+        onclick="window.location.href='https://skr-drink.github.io/drink-log/'"
+        style="width:100%; padding:14px 16px; margin:0 0 12px; border:0; border-radius:12px; background:#111; color:#fff; font-size:16px; font-weight:700;"
+      >
+        アプリに戻る
+      </button>
+
       <div class="print-wrap">
         ${reportHtml}
       </div>
