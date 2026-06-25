@@ -27,6 +27,7 @@ let currentEditDate = null;
 let currentManageTab = "settings";
 let currentInputMode = "quick";
 let lastQuickAddedDrinkId = null;
+let calendarMonth = null;
 
 function pureAlcohol(ml, p){
   return (Number(ml || 0) * (Number(p || 0) / 100) * 0.8) || 0;
@@ -918,34 +919,101 @@ function printReport(){
 
 document.addEventListener("keydown", function(e){
   if(e.key === "Escape"){
+    closeDateCalendar();
     closeManageModal();
   }
 });
 
-document.getElementById("date").addEventListener("blur", function(){
-  this.value = normalizeDateInput(this.value);
-  updateWeekday();
-});
-
-function openDatePicker(input){
-  if(typeof input.showPicker !== "function") return;
-
-  try{
-    input.showPicker();
-  } catch(e){
-    // Some browsers only allow showPicker() from a direct user click.
-  }
+function parseDateParts(dateStr){
+  if(!isValidDateString(dateStr)) return null;
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return { year, month, day };
 }
 
-document.getElementById("date").addEventListener("click", function(){
-  openDatePicker(this);
+function makeDateString(year, month, day){
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function openDateCalendar(){
+  const selected = parseDateParts(document.getElementById("date").value);
+  const today = new Date();
+  calendarMonth = selected
+    ? new Date(selected.year, selected.month - 1, 1)
+    : new Date(today.getFullYear(), today.getMonth(), 1);
+  renderDateCalendar();
+  document.getElementById("dateCalendar").classList.remove("hidden");
+}
+
+function closeDateCalendar(){
+  const calendar = document.getElementById("dateCalendar");
+  if(calendar) calendar.classList.add("hidden");
+}
+
+function renderDateCalendar(){
+  const calendar = document.getElementById("dateCalendar");
+  if(!calendarMonth || !calendar) return;
+
+  const year = calendarMonth.getFullYear();
+  const month = calendarMonth.getMonth();
+  const selectedDate = document.getElementById("date").value;
+  const todayDate = getTodayString();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const weekdays = ["日","月","火","水","木","金","土"];
+
+  const spacerButtons = Array.from({ length: firstDay }, () => (
+    '<div class="date-day-spacer"></div>'
+  )).join("");
+
+  const dayButtons = Array.from({ length: daysInMonth }, (_, index) => {
+    const day = index + 1;
+    const value = makeDateString(year, month + 1, day);
+    const classes = [
+      "date-day",
+      value === selectedDate ? "is-selected" : "",
+      value === todayDate ? "is-today" : ""
+    ].filter(Boolean).join(" ");
+
+    return `<button type="button" class="${classes}" data-date="${value}">${day}</button>`;
+  }).join("");
+
+  calendar.innerHTML = `
+    <div class="date-calendar-head">
+      <button type="button" class="subbtn" data-month="-1">‹</button>
+      <div class="date-calendar-title">${year}年 ${month + 1}月</div>
+      <button type="button" class="subbtn" data-month="1">›</button>
+    </div>
+    <div class="date-calendar-grid">
+      ${weekdays.map(w => `<div class="date-calendar-weekday">${w}</div>`).join("")}
+      ${spacerButtons}
+      ${dayButtons}
+    </div>
+  `;
+}
+
+document.getElementById("date").addEventListener("click", openDateCalendar);
+document.getElementById("date").addEventListener("focus", openDateCalendar);
+
+document.getElementById("dateCalendar").addEventListener("click", function(e){
+  const monthButton = e.target.closest("[data-month]");
+  if(monthButton){
+    calendarMonth.setMonth(calendarMonth.getMonth() + Number(monthButton.dataset.month));
+    renderDateCalendar();
+    return;
+  }
+
+  const dayButton = e.target.closest("[data-date]");
+  if(dayButton){
+    document.getElementById("date").value = dayButton.dataset.date;
+    updateWeekday();
+    closeDateCalendar();
+  }
 });
 
-document.getElementById("date").addEventListener("focus", function(){
-  openDatePicker(this);
+document.addEventListener("click", function(e){
+  if(e.target.closest(".date-picker-field")) return;
+  closeDateCalendar();
 });
-
-document.getElementById("date").addEventListener("change", updateWeekday);
 
 function csvEscape(value){
   const str = String(value ?? "");

@@ -113,6 +113,86 @@
 
   .hidden{ display:none; }
 
+  .date-picker-field{
+    position:relative;
+  }
+
+  #date{
+    cursor:pointer;
+  }
+
+  .date-calendar{
+    position:absolute;
+    top:calc(100% - 4px);
+    left:0;
+    z-index:50;
+    width:min(100%, 340px);
+    padding:12px;
+    border:1px solid #ddd;
+    border-radius:14px;
+    background:#fff;
+    box-shadow:0 10px 24px rgba(0,0,0,.16);
+  }
+
+  .date-calendar-head{
+    display:grid;
+    grid-template-columns:48px 1fr 48px;
+    gap:8px;
+    align-items:center;
+    margin-bottom:10px;
+  }
+
+  .date-calendar-head button{
+    min-height:40px;
+    padding:8px;
+  }
+
+  .date-calendar-title{
+    text-align:center;
+    font-weight:700;
+  }
+
+  .date-calendar-grid{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:4px;
+  }
+
+  .date-calendar-weekday{
+    min-height:28px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#666;
+    font-size:12px;
+  }
+
+  .date-day{
+    min-height:40px;
+    padding:8px 0;
+    border:1px solid transparent;
+    border-radius:10px;
+    background:#f7f7f7;
+    color:#222;
+  }
+
+  .date-day:hover{
+    background:#eee;
+  }
+
+  .date-day.is-selected{
+    background:#111;
+    color:#fff;
+  }
+
+  .date-day.is-today{
+    border-color:#111;
+  }
+
+  .date-day-spacer{
+    min-height:40px;
+  }
+
   .list-item{
     border-bottom:1px solid #eee;
     padding:12px 0;

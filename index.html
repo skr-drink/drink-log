@@ -18,8 +18,11 @@
 
 <div id="entryCard" class="card">
   <label>日付</label>
-  <input type="date" id="date" autocomplete="off">
-  <div class="muted">クリックするとカレンダーから日付を選べます</div>
+  <div class="date-picker-field">
+    <input type="text" id="date" autocomplete="off" readonly>
+    <div id="dateCalendar" class="date-calendar hidden"></div>
+  </div>
+  <div class="muted">日付をクリックすると、そのまま選択して閉じます</div>
 
 <div id="weekday" class="muted" style="margin-top:-6px;"></div>
 
