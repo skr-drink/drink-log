@@ -28,6 +28,7 @@ let currentManageTab = "settings";
 let currentInputMode = "quick";
 let lastQuickAddedDrinkId = null;
 let calendarMonth = null;
+let calendarMonthPointerHandled = false;
 
 function pureAlcohol(ml, p){
   return (Number(ml || 0) * (Number(p || 0) / 100) * 0.8) || 0;
@@ -935,13 +936,19 @@ function makeDateString(year, month, day){
 }
 
 function openDateCalendar(){
+  const calendar = document.getElementById("dateCalendar");
+  if(calendar && !calendar.classList.contains("hidden")){
+    renderDateCalendar();
+    return;
+  }
+
   const selected = parseDateParts(document.getElementById("date").value);
   const today = new Date();
   calendarMonth = selected
     ? new Date(selected.year, selected.month - 1, 1)
     : new Date(today.getFullYear(), today.getMonth(), 1);
   renderDateCalendar();
-  document.getElementById("dateCalendar").classList.remove("hidden");
+  calendar.classList.remove("hidden");
 }
 
 function closeDateCalendar(){
@@ -991,6 +998,16 @@ function renderDateCalendar(){
   `;
 }
 
+function changeCalendarMonth(delta){
+  if(!calendarMonth) return;
+  calendarMonth = new Date(
+    calendarMonth.getFullYear(),
+    calendarMonth.getMonth() + delta,
+    1
+  );
+  renderDateCalendar();
+}
+
 document.getElementById("date").addEventListener("click", openDateCalendar);
 document.getElementById("date").addEventListener("focus", openDateCalendar);
 
@@ -1006,11 +1023,28 @@ document.querySelector(".date-picker-field").addEventListener("keydown", functio
   }
 });
 
+document.getElementById("dateCalendar").addEventListener("pointerdown", function(e){
+  const monthButton = e.target.closest("[data-month]");
+  if(!monthButton) return;
+
+  calendarMonthPointerHandled = true;
+  e.preventDefault();
+  e.stopPropagation();
+  changeCalendarMonth(Number(monthButton.dataset.month));
+  setTimeout(() => {
+    calendarMonthPointerHandled = false;
+  }, 500);
+});
+
 document.getElementById("dateCalendar").addEventListener("click", function(e){
   const monthButton = e.target.closest("[data-month]");
   if(monthButton){
-    calendarMonth.setMonth(calendarMonth.getMonth() + Number(monthButton.dataset.month));
-    renderDateCalendar();
+    if(calendarMonthPointerHandled){
+      calendarMonthPointerHandled = false;
+      return;
+    }
+
+    changeCalendarMonth(Number(monthButton.dataset.month));
     return;
   }
 
