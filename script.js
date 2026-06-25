@@ -927,6 +927,26 @@ document.getElementById("date").addEventListener("blur", function(){
   updateWeekday();
 });
 
+function openDatePicker(input){
+  if(typeof input.showPicker !== "function") return;
+
+  try{
+    input.showPicker();
+  } catch(e){
+    // Some browsers only allow showPicker() from a direct user click.
+  }
+}
+
+document.getElementById("date").addEventListener("click", function(){
+  openDatePicker(this);
+});
+
+document.getElementById("date").addEventListener("focus", function(){
+  openDatePicker(this);
+});
+
+document.getElementById("date").addEventListener("change", updateWeekday);
+
 function csvEscape(value){
   const str = String(value ?? "");
   if (str.includes('"') || str.includes(',') || str.includes('\n')) {
