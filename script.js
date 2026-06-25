@@ -994,6 +994,18 @@ function renderDateCalendar(){
 document.getElementById("date").addEventListener("click", openDateCalendar);
 document.getElementById("date").addEventListener("focus", openDateCalendar);
 
+document.querySelector(".date-picker-field").addEventListener("pointerdown", function(e){
+  if(e.target.closest("#dateCalendar")) return;
+  openDateCalendar();
+});
+
+document.querySelector(".date-picker-field").addEventListener("keydown", function(e){
+  if(e.key === "Enter" || e.key === " "){
+    e.preventDefault();
+    openDateCalendar();
+  }
+});
+
 document.getElementById("dateCalendar").addEventListener("click", function(e){
   const monthButton = e.target.closest("[data-month]");
   if(monthButton){
